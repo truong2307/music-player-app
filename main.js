@@ -10,6 +10,7 @@ const cd = $('.cd');
 const player = $('.player');
 const btnTogglePlay = $('.btn-toggle-play');
 const audio = $('#audio');
+const playList = $('.playlist');
 
 const App = {
     songPlay: 1,
@@ -17,8 +18,8 @@ const App = {
     songs: songs,
     render: function(){
         const html = `
-            ${this.songs.map((song) => `
-            <div class="song">
+            ${this.songs.map((song, index) => `
+            <div class="song" data-index = "${index}">
                 <div class="thumb" style="background-image: url('${song.imageUrl}')">
                 </div>
                 <div class="body">
@@ -32,7 +33,7 @@ const App = {
             `).join('')}
         
         `
-        $('.playlist').innerHTML = html
+        playList.innerHTML = html
     },
     handlerEvents(){
         const _this = this
@@ -54,13 +55,43 @@ const App = {
             _this.isPlay = !_this.isPlay;
             if(_this.isPlay === false){
                 audio.pause();
-                player.classList.remove('playing')
             }
             else{
                 audio.play();
+            }
+
+            audio.onplay = function(){
                 player.classList.add('playing')
             }
+
+            audio.onpause = function(){
+                player.classList.remove('playing')
+            }
         }
+
+        //handler click 1 song
+        playList.onclick = function(e){
+            const songRoot = e.target.closest('.song');
+
+            if( songRoot || e.target.closest('.option')){
+
+                if(songRoot){
+                    const indexSong = songRoot.getAttribute('data-index');
+                    _this.songPlay = indexSong
+                    _this.renderDashboard();
+
+                    _this.isPlay = true
+
+                    audio.src = _this.songs[_this.songPlay].path
+                    audio.play();
+                    audio.onplay = function(){
+                        player.classList.add('playing')
+                    }
+                    console.log(songRoot)
+                }
+            }
+        }
+
     },
     renderDashboard(){
         const song = this.songs[this.songPlay]
