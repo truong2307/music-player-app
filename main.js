@@ -191,22 +191,24 @@ const App = {
         audioElement.ontimeupdate = function(){
             const currentTime = audioElement.currentTime;
             const valueOfLineTimeSong = (currentTime * 100) / totalTimeOfSong;
+           
+            lineTimeSong.oninput = function(e){
+                eventOnChange = e;
+                const timeSongNew = lineTimeSong.value;
+                const startSongNewTime = (timeSongNew * totalTimeOfSong) / 100;
+                audioElement.currentTime = startSongNewTime;
+                console.log(startSongNewTime)
+                }
 
             lineTimeSong.value = valueOfLineTimeSong;    
-            
+
             if(totalTimeOfSong === currentTime){
                 _this.goNextSong();
             }
             //  console.log(lineTimeSong.value)
         }
 
-        lineTimeSong.onchange = function(e){
-            console.log(eventOnChange)
-            const timeSongNew = lineTimeSong.value;
-            const startSongNewTime = (timeSongNew * totalTimeOfSong) / 100;
-            audioElement.currentTime = startSongNewTime;
-            console.log(startSongNewTime)
-            }
+        
         
         
       },
