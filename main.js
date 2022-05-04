@@ -12,9 +12,9 @@ const headerDashboard = $('header h2');
 const btnNext = $('.btn-next');
 const btnPrevious = $('.btn-prev');
 var songActive;
+const audioElement = document.getElementById('audio');
 
 //footer
-const btnPlaySong2 = $('.footer-item.playSong');
 const footerItem = $$('.footer-item');
 const footerListItem = $('.footer-list-items');
 
@@ -48,25 +48,6 @@ const App = {
         headerDashboard.innerHTML = currentSong.name
         cdThumb.style.backgroundImage = `url(${currentSong.imageUrl})`
     },
-    rotateImageCd(){
-        const _this = this
-
-        const playAndPauseSong = () =>{
-            _this.isPlay = !_this.isPlay
-            if(_this.isPlay){
-                player.classList.add('playing')
-                cdThumb.style.animationPlayState = "running"
-            }
-            else{
-                player.classList.remove('playing')
-                cdThumb.style.animationPlayState = "paused"
-            }
-        }
-
-        btnPausePlay.onclick = function(){
-            playAndPauseSong();
-        }
-    },
     handlerScrollScreen(){
         const cdWidth = cd.offsetWidth;
 
@@ -88,6 +69,12 @@ const App = {
                 _this.currentPlayingSong += 1;
             }
 
+            audioElement.src = _this.songs[_this.currentPlayingSong].path;
+            audioElement.play();
+            audioElement.onplay = function(){
+                player.classList.add('playing')
+                cdThumb.style.animationPlayState = "running"
+            }
             _this.renderCurrentSong();
             _this.renderSongs(); 
             songActive.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
@@ -99,6 +86,13 @@ const App = {
             }
             else{
                 _this.currentPlayingSong -= 1;
+            }
+
+            audioElement.src = _this.songs[_this.currentPlayingSong].path;
+            audioElement.play();
+            audioElement.onplay = function(){
+                player.classList.add('playing')
+                cdThumb.style.animationPlayState = "running"
             }
             _this.renderCurrentSong();
             _this.renderSongs(); 
@@ -114,6 +108,12 @@ const App = {
                 
                 const indexSongSelect = songSelectEle.getAttribute('index-data');
                 _this.currentPlayingSong = parseInt(indexSongSelect);
+                audioElement.src = _this.songs[_this.currentPlayingSong].path;
+                audioElement.play();
+                audioElement.onplay = function(){
+                    player.classList.add('playing')
+                    cdThumb.style.animationPlayState = "running"
+                }
                 _this.renderCurrentSong();
                 _this.renderSongs();
             }   
@@ -142,17 +142,41 @@ const App = {
                 }
             }
         }
+      },
+      pauseAndPlaySong(){
+        const _this = this
+        const currentSong = this.songs[this.currentPlayingSong];
+        
+        audioElement.src = currentSong.path
 
+        btnPausePlay.onclick = function(){
+            _this.isPlay = !_this.isPlay
+            if(_this.isPlay){
+                audioElement.play();
+            }
+            else{
+                audioElement.pause();
+            }
+
+            audioElement.onplay = function(){
+                player.classList.add('playing')
+                cdThumb.style.animationPlayState = "running"
+            }
+            audioElement.onpause = function(){
+                player.classList.remove('playing')
+                cdThumb.style.animationPlayState = "paused"
+            }
+        }
       },
     start(){
         this.shuffle(this.songs)
         this.renderSongs();
-        this.rotateImageCd();
         this.handlerScrollScreen();
         this.renderCurrentSong();
         this.nextAndPreviousSong();
         this.selectSong();
         this.selectOption();
+        this.pauseAndPlaySong();
     }
 }
 
