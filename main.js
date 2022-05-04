@@ -1,25 +1,31 @@
-import songMasterData from "./assets/songMasterData.js";
+import masterData from "./assets/songMasterData.js"
 
-const songs = songMasterData;
+const songsFromMasterData = masterData;
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
-
-const headerDashboard = $('header h2');
+const btnPausePlay = $('.btn-toggle-play');
+const player = $('.player');
 const cdThumb = $('.cd-thumb');
 const cd = $('.cd');
-const player = $('.player');
-const btnTogglePlay = $('.btn-toggle-play');
-const audio = $('#audio');
-const playList = $('.playlist');
+const playlist = $('.playlist');
+const headerDashboard = $('header h2');
+const btnNext = $('.btn-next');
+const btnPrevious = $('.btn-prev');
+var songActive;
+
+//footer
+const btnPlaySong2 = $('.footer-item.playSong');
+const footerItem = $$('.footer-item');
+const footerListItem = $('.footer-list-items');
 
 const App = {
-    songPlay: 1,
+    currentPlayingSong: 0,
+    songs : songsFromMasterData,
     isPlay: false,
-    songs: songs,
-    render: function(){
-        const html = `
+    renderSongs(){
+        const htmlToRender = `
             ${this.songs.map((song, index) => `
-            <div class="song" data-index = "${index}">
+            <div class="song ${index === this.currentPlayingSong && 'active'}" index-data = "${index}">
                 <div class="thumb" style="background-image: url('${song.imageUrl}')">
                 </div>
                 <div class="body">
@@ -29,82 +35,125 @@ const App = {
                 <div class="option">
                 <i class="fas fa-ellipsis-h"></i>
                 </div>
-          </div>
+            </div>
             `).join('')}
-        
         `
-        playList.innerHTML = html
+        
+        playlist.innerHTML = htmlToRender;
+        songActive = $('.song.active');
     },
-    handlerEvents(){
-        const _this = this
-        const widthCd = cd.offsetWidth
-        //handler scroll screen
-        document.onscroll = function(){
-            const scrollValue = window.scrollY;
-            const newWidthCd = widthCd - scrollValue;
-            cd.style.width = newWidthCd < 0 ? 0 : newWidthCd +'px';
-            cd.style.opacity = newWidthCd/scrollValue
-        }
+    renderCurrentSong(){
+        const currentSong = this.songs[this.currentPlayingSong];
 
-        // handler when click play or pause button
-        btnTogglePlay.onclick = function(){
-            if(audio.src === ''){
-                audio.src = _this.songs[_this.songPlay].path
-            }
-            
-            _this.isPlay = !_this.isPlay;
-            if(_this.isPlay === false){
-                audio.pause();
+        headerDashboard.innerHTML = currentSong.name
+        cdThumb.style.backgroundImage = `url(${currentSong.imageUrl})`
+    },
+    rotateImageCd(){
+        const _this = this
+
+        const playAndPauseSong = () =>{
+            _this.isPlay = !_this.isPlay
+            if(_this.isPlay){
+                player.classList.add('playing')
+                cdThumb.style.animationPlayState = "running"
             }
             else{
-                audio.play();
-            }
-
-            audio.onplay = function(){
-                player.classList.add('playing')
-            }
-
-            audio.onpause = function(){
                 player.classList.remove('playing')
+                cdThumb.style.animationPlayState = "paused"
             }
         }
 
-        //handler click 1 song
-        playList.onclick = function(e){
-            const songRoot = e.target.closest('.song');
+        btnPausePlay.onclick = function(){
+            playAndPauseSong();
+        }
+    },
+    handlerScrollScreen(){
+        const cdWidth = cd.offsetWidth;
 
-            if( songRoot || e.target.closest('.option')){
+        document.onscroll = function(){
+            const scrollValue = window.scrollY;
+            const newWidOfCd = cdWidth - scrollValue;
 
-                if(songRoot){
-                    const indexSong = songRoot.getAttribute('data-index');
-                    _this.songPlay = indexSong
-                    _this.renderDashboard();
+            cd.style.width = newWidOfCd < 0 ? 0 : newWidOfCd+ 'px';
+            cdThumb.style.opacity = newWidOfCd / scrollValue;
+        }
+    },
+    nextAndPreviousSong(){
+        const _this =this
+        btnNext.onclick = function(){
+            if(_this.currentPlayingSong === _this.songs.length-1){
+                _this.currentPlayingSong = 0
+            }
+            else{
+                _this.currentPlayingSong += 1;
+            }
 
-                    _this.isPlay = true
+            _this.renderCurrentSong();
+            _this.renderSongs(); 
+            songActive.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+        }
 
-                    audio.src = _this.songs[_this.songPlay].path
-                    audio.play();
-                    audio.onplay = function(){
-                        player.classList.add('playing')
-                    }
-                    console.log(songRoot)
+        btnPrevious.onclick = function(){
+            if(_this.currentPlayingSong === 0){
+                _this.currentPlayingSong = _this.songs.length-1
+            }
+            else{
+                _this.currentPlayingSong -= 1;
+            }
+            _this.renderCurrentSong();
+            _this.renderSongs(); 
+            songActive.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+        }
+    },
+    selectSong(){
+        const _this = this;
+
+        playlist.onclick = function(e){
+            const songSelectEle = e.target.closest('.song:not(.active)')
+            if(songSelectEle || e.target.closest('.option')){
+                
+                const indexSongSelect = songSelectEle.getAttribute('index-data');
+                _this.currentPlayingSong = parseInt(indexSongSelect);
+                _this.renderCurrentSong();
+                _this.renderSongs();
+            }   
+        }
+    },
+    shuffle(array) {
+        let currentIndex = array.length,  randomIndex;
+        while (currentIndex != 0) {
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+          [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]];
+        }
+
+        return array;
+      },
+      selectOption(){
+        footerListItem.onclick = function(e){
+            const footerListItemRoot = e.target.closest('.footer-item');
+            if(footerListItemRoot){
+                const [...nodeList] = footerItem 
+                const eleHasActive = nodeList.find(item => item.classList.contains('active'))
+                if(eleHasActive !== footerListItemRoot){
+                    eleHasActive.classList.remove('active');
+                    footerListItemRoot.classList.add('active');
                 }
             }
         }
 
-    },
-    renderDashboard(){
-        const song = this.songs[this.songPlay]
-        headerDashboard.textContent = song.name
-        cdThumb.style.backgroundImage = `url(${song.imageUrl})`
-    },
-    start: function(){
-        this.render();
-        this.handlerEvents();
-        this.renderDashboard();
-
+      },
+    start(){
+        this.shuffle(this.songs)
+        this.renderSongs();
+        this.rotateImageCd();
+        this.handlerScrollScreen();
+        this.renderCurrentSong();
+        this.nextAndPreviousSong();
+        this.selectSong();
+        this.selectOption();
     }
-
 }
 
 App.start();
