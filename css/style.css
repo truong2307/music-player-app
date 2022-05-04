@@ -229,3 +229,11 @@ color: #c7ccde88;
 .footer-item.active {
 color: var(--primary-color);
 }
+
+.btn-repeat.active{
+  color: var(--primary-color);
+}
+
+.btn-random.active{
+  color: var(--primary-color);
+}

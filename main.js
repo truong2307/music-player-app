@@ -12,8 +12,12 @@ const headerDashboard = $('header h2');
 const btnNext = $('.btn-next');
 const btnPrevious = $('.btn-prev');
 var songActive;
+var totalTimeOfSong;
 const audioElement = document.getElementById('audio');
 const lineTimeSong = document.getElementById('progress');
+const repeatButton = $('.btn-repeat');
+const randomButton = $('.btn-random');
+
 
 //footer
 const footerItem = $$('.footer-item');
@@ -179,13 +183,11 @@ const App = {
       },
       handlerTimeOfSong(){
           const _this = this;
-        var totalTimeOfSong;
+        
         var eventOnChange;
-
         
         audioElement.addEventListener("loadeddata", function() {
             totalTimeOfSong = this.duration; 
-            console.log(totalTimeOfSong)
            });
         
         audioElement.ontimeupdate = function(){
@@ -197,20 +199,59 @@ const App = {
                 const timeSongNew = lineTimeSong.value;
                 const startSongNewTime = (timeSongNew * totalTimeOfSong) / 100;
                 audioElement.currentTime = startSongNewTime;
-                console.log(startSongNewTime)
                 }
 
             lineTimeSong.value = valueOfLineTimeSong;    
-
-            if(totalTimeOfSong === currentTime){
+            if(totalTimeOfSong === currentTime && !randomButton.classList.contains('active')){
                 _this.goNextSong();
             }
-            //  console.log(lineTimeSong.value)
+            else if(totalTimeOfSong === currentTime){
+                _this.currentPlayingSong = _this.selectRandomSong();;
+                _this.goNextSong();
+            }
+
+            if(repeatButton.classList.contains('active')){
+                audioElement.loop = true;
+            } 
+            else{
+                audioElement.loop = false;
+            }
+        }
+      },
+      repeatSongAndRandomBtn(){
+        repeatButton.onclick = function(){
+            repeatButton.classList.toggle('active');
+
+            if(repeatButton.classList.contains('active')){
+                randomButton.classList.remove('active');
+            }
+            
         }
 
-        
-        
-        
+        randomButton.onclick = function(){
+            randomButton.classList.toggle('active');
+            
+            if(randomButton.classList.contains('active')){
+                repeatButton.classList.remove('active');
+            }
+        }
+      },
+      selectRandomSong(){
+        const min = 0;
+        const max = this.songs.length;
+        const result = Math.round(Math.random() * (max - min) + min);
+        if(result === this.currentPlayingSong){
+            switch (result) {
+                case result > this.songs.length -1:
+                    result = result - 2;
+                    break;
+                    case result <0:
+                    result = result +2;
+                    break;
+            }
+        }
+
+        return result;
       },
     start(){
         this.shuffle(this.songs)
@@ -222,7 +263,7 @@ const App = {
         this.selectOption();
         this.pauseAndPlaySong();
         this.handlerTimeOfSong();
-        
+        this.repeatSongAndRandomBtn();
     }
 }
 
