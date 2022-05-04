@@ -13,6 +13,7 @@ const btnNext = $('.btn-next');
 const btnPrevious = $('.btn-prev');
 var songActive;
 const audioElement = document.getElementById('audio');
+const lineTimeSong = document.getElementById('progress');
 
 //footer
 const footerItem = $$('.footer-item');
@@ -22,6 +23,28 @@ const App = {
     currentPlayingSong: 0,
     songs : songsFromMasterData,
     isPlay: false,
+    getCurrSong(){
+        return this.songs[this.currentPlayingSong];
+    },
+    goNextSong(){
+        if(this.currentPlayingSong === this.songs.length-1){
+            this.currentPlayingSong = 0
+        }
+        else{
+            this.currentPlayingSong += 1;
+        }
+
+        audioElement.src = this.getCurrSong().path;
+        audioElement.play();
+        this.isPlay = true;
+        audioElement.onplay = function(){
+            player.classList.add('playing')
+            cdThumb.style.animationPlayState = "running"
+        }
+        this.renderCurrentSong();
+        this.renderSongs(); 
+        songActive.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+    },
     renderSongs(){
         const htmlToRender = `
             ${this.songs.map((song, index) => `
@@ -43,7 +66,7 @@ const App = {
         songActive = $('.song.active');
     },
     renderCurrentSong(){
-        const currentSong = this.songs[this.currentPlayingSong];
+        const currentSong = this.getCurrSong();
 
         headerDashboard.innerHTML = currentSong.name
         cdThumb.style.backgroundImage = `url(${currentSong.imageUrl})`
@@ -62,22 +85,7 @@ const App = {
     nextAndPreviousSong(){
         const _this =this
         btnNext.onclick = function(){
-            if(_this.currentPlayingSong === _this.songs.length-1){
-                _this.currentPlayingSong = 0
-            }
-            else{
-                _this.currentPlayingSong += 1;
-            }
-
-            audioElement.src = _this.songs[_this.currentPlayingSong].path;
-            audioElement.play();
-            audioElement.onplay = function(){
-                player.classList.add('playing')
-                cdThumb.style.animationPlayState = "running"
-            }
-            _this.renderCurrentSong();
-            _this.renderSongs(); 
-            songActive.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+            _this.goNextSong();
         }
 
         btnPrevious.onclick = function(){
@@ -88,8 +96,9 @@ const App = {
                 _this.currentPlayingSong -= 1;
             }
 
-            audioElement.src = _this.songs[_this.currentPlayingSong].path;
+            audioElement.src = _this.getCurrSong().path;
             audioElement.play();
+            _this.isPlay = true;
             audioElement.onplay = function(){
                 player.classList.add('playing')
                 cdThumb.style.animationPlayState = "running"
@@ -108,7 +117,8 @@ const App = {
                 
                 const indexSongSelect = songSelectEle.getAttribute('index-data');
                 _this.currentPlayingSong = parseInt(indexSongSelect);
-                audioElement.src = _this.songs[_this.currentPlayingSong].path;
+                audioElement.src = _this.getCurrSong().path;
+                _this.isPlay = true;
                 audioElement.play();
                 audioElement.onplay = function(){
                     player.classList.add('playing')
@@ -145,11 +155,10 @@ const App = {
       },
       pauseAndPlaySong(){
         const _this = this
-        const currentSong = this.songs[this.currentPlayingSong];
-        
+        const currentSong = this.getCurrSong();
         audioElement.src = currentSong.path
-
         btnPausePlay.onclick = function(){
+            
             _this.isPlay = !_this.isPlay
             if(_this.isPlay){
                 audioElement.play();
@@ -168,6 +177,39 @@ const App = {
             }
         }
       },
+      handlerTimeOfSong(){
+          const _this = this;
+        var totalTimeOfSong;
+        var eventOnChange;
+
+        
+        audioElement.addEventListener("loadeddata", function() {
+            totalTimeOfSong = this.duration; 
+            console.log(totalTimeOfSong)
+           });
+        
+        audioElement.ontimeupdate = function(){
+            const currentTime = audioElement.currentTime;
+            const valueOfLineTimeSong = (currentTime * 100) / totalTimeOfSong;
+
+            lineTimeSong.value = valueOfLineTimeSong;    
+            
+            if(totalTimeOfSong === currentTime){
+                _this.goNextSong();
+            }
+            //  console.log(lineTimeSong.value)
+        }
+
+        lineTimeSong.onchange = function(e){
+            console.log(eventOnChange)
+            const timeSongNew = lineTimeSong.value;
+            const startSongNewTime = (timeSongNew * totalTimeOfSong) / 100;
+            audioElement.currentTime = startSongNewTime;
+            console.log(startSongNewTime)
+            }
+        
+        
+      },
     start(){
         this.shuffle(this.songs)
         this.renderSongs();
@@ -177,6 +219,8 @@ const App = {
         this.selectSong();
         this.selectOption();
         this.pauseAndPlaySong();
+        this.handlerTimeOfSong();
+        
     }
 }
 
