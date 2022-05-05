@@ -17,8 +17,6 @@ const audioElement = document.getElementById('audio');
 const lineTimeSong = document.getElementById('progress');
 const repeatButton = $('.btn-repeat');
 const randomButton = $('.btn-random');
-
-
 //footer
 const footerItem = $$('.footer-item');
 const footerListItem = $('.footer-list-items');
