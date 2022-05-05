@@ -238,15 +238,18 @@ const App = {
       },
       selectRandomSong(){
         const min = 0;
-        const max = this.songs.length;
+        const max = this.songs.length - 1;
         const result = Math.round(Math.random() * (max - min) + min);
         if(result === this.currentPlayingSong){
             switch (result) {
-                case result > this.songs.length -1:
-                    result = result - 2;
+                case result === this.songs.length -1:
+                    result = result - 1;
                     break;
-                    case result <0:
-                    result = result +2;
+                    case result === 0:
+                    result = result + 1;
+                    break;
+                    default:
+                    result = result + 1;
                     break;
             }
         }
